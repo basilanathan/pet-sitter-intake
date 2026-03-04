@@ -198,7 +198,35 @@ MIT License — See [LICENSE](LICENSE) for details.
 
 Contributions welcome! Please open an issue or submit a pull request.
 
+## Permissions
+
+This skill requires the following permissions when used via ClawHub:
+
+| Permission | Justification |
+|------------|---------------|
+| `filesystem` | Write generated PDF files to the user's specified output path |
+| `shell` | Execute the Python script (`python scripts/generate_form.py`) |
+
+No network access is required. All processing happens locally.
+
+## Troubleshooting
+
+### "reportlab not found"
+Install dependencies: `pip install reportlab pyyaml`
+
+### PDF not fillable
+Ensure you're not using `--no-fillable`. Fillable fields are enabled by default.
+
+### Form looks different than expected
+Check your theme with `--list-themes`. Default is `lavender`.
+
+### Config file not loading
+Verify YAML syntax. Use the examples in `examples/` as a reference.
+
+### Permission denied on output
+Ensure you have write access to the output directory.
+
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/your-repo/pet-sitter-intake/issues)
+- **Issues**: [GitHub Issues](https://github.com/basilanathan/pet-sitter-intake/issues)
 - **ClawHub**: [Skill Page](https://clawhub.ai/skills/pet-sitter-intake)

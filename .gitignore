@@ -1,1 +1,23 @@
+# macOS
 .DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Generated files
+*.pdf
+!examples/*.pdf
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Config (user-specific)
+config.yaml

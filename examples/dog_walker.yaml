@@ -14,7 +14,7 @@ fillable: true
 include_home_access: true     # Need key/code access for pickups
 
 # Output
-output: "urban_paws_intake.pdf"
+output: "screenshots/urban_paws_intake.pdf"
 
 # Branding
 theme: ocean                  # Calming blue tones

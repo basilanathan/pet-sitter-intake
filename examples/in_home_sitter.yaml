@@ -14,7 +14,7 @@ fillable: true
 include_home_access: true     # Critical for in-home sitting
 
 # Output
-output: "home_sweet_home_intake.pdf"
+output: "screenshots/home_sweet_home_intake.pdf"
 
 # Branding
 theme: lavender               # Warm, welcoming feel

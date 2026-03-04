@@ -14,7 +14,7 @@ fillable: true                # Clients fill out digitally before arrival
 include_home_access: false    # Not needed for facility-based boarding
 
 # Output
-output: "cozy_canine_intake.pdf"
+output: "screenshots/cozy_canine_intake.pdf"
 
 # Branding
 theme: forest                 # Natural green tones
