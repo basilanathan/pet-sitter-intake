@@ -39,7 +39,7 @@ clawhub install pet-sitter-intake
 ### Manual Installation
 
 ```bash
-git clone https://github.com/your-repo/pet-sitter-intake.git
+git clone https://github.com/basilanathan/pet-sitter-intake.git
 cd pet-sitter-intake
 pip install -r requirements.txt
 ```
