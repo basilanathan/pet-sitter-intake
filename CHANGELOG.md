@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.0] - 2026-03-05
+
+### Added
+- **`FormContext` class**: Centralized context object carrying config, theme, styles, and helper methods
+- **`pages/` subpackage**: Modular page builders for each form section:
+  - `owner_info.py` - Owner information page (page 1)
+  - `home_access.py` - Home access section
+  - `pet_profile.py` - Pet profile, vaccinations, health, feeding pages
+  - `service_specific.py` - Walking, boarding, drop-in specific pages
+  - `authorization.py` - Authorization and signature page
+
+### Changed
+- **Refactored `builder.py`**: Now a thin orchestrator (85 lines vs 485) that calls page builders
+- Page builders receive `FormContext` instead of 5-6 separate parameters
+- `FormContext.checkbox_row()` and `FormContext.text_field()` handle fillable toggle automatically
+
+### Improved
+- Code organization: Each form section in its own module
+- Maintainability: Adding new pages or sections is now straightforward
+- Testability: Page builders can be unit tested independently
+
 ## [5.4.0] - 2026-03-05
 
 ### Added
