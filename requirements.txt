@@ -5,3 +5,8 @@ reportlab>=4.0.0
 
 # YAML config support (optional but recommended)
 pyyaml>=6.0
+
+# Development / Testing (optional)
+# pip install -r requirements.txt[dev] or install these separately
+# pytest>=7.0.0
+# pytest-cov>=4.0.0

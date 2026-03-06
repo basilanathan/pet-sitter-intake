@@ -1,6 +1,6 @@
 ---
 name: pet-sitter-intake
-version: 5.3.0
+version: 5.4.0
 description: >
   Generate professional PDF client intake forms for pet sitting businesses.
   Use when a pet sitter, dog walker, pet boarder, or pet care professional needs

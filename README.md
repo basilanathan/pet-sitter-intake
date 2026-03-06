@@ -231,6 +231,23 @@ colors:
 - reportlab >= 4.0.0
 - pyyaml >= 6.0 (optional, for config files)
 
+## Development
+
+### Running Tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest tests/ -v
+```
+
+### Config Validation
+
+The generator validates configuration values and auto-corrects invalid inputs:
+- `num_pets` is clamped to 1-10
+- Invalid `service_type` falls back to "general"
+- Invalid `theme` falls back to "lavender"
+- Warnings are printed for any corrections made
+
 ## Examples
 
 See the `examples/` folder for sample config files:

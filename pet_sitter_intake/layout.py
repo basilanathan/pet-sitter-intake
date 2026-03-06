@@ -5,17 +5,24 @@ from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.enums import TA_CENTER
 
-from .constants import PAGE_W
-from .flowables import FillableTextField, _c
+from .constants import PAGE_W, GUTTER, SPACING
+from .flowables import FillableTextField, get_color
 
 
-def sty():
+def sty(theme_colors=None):
     """Create paragraph styles using current theme colors.
+    
+    Args:
+        theme_colors: Dict mapping color keys to reportlab Color objects
     
     Returns:
         Dict mapping style names to ParagraphStyle objects.
     """
+    tc = theme_colors or {}
     s = {}
+    
+    def _c(key):
+        return get_color(tc, key)
     
     def ps(name, **kw):
         defaults = dict(
@@ -45,32 +52,36 @@ def sp(h=0.1):
     """Vertical spacer.
     
     Args:
-        h: Height in inches (default 0.1)
+        h: Height in inches (default 0.1), or a SPACING key like 'md'
     """
+    if isinstance(h, str) and h in SPACING:
+        h = SPACING[h]
     return Spacer(1, h * inch)
 
 
-def hr(color=None, thick=1.0, after=8):
+def hr(theme_colors=None, thick=1.0, after=8):
     """Horizontal rule.
     
     Args:
-        color: Line color (default: accent color from theme)
+        theme_colors: Dict of theme colors (None uses accent color)
         thick: Line thickness in points
         after: Space after in points
     """
-    return HRFlowable(width="100%", thickness=thick, color=color or _c("accent"), spaceAfter=after)
+    color = get_color(theme_colors, "accent") if theme_colors else None
+    return HRFlowable(width="100%", thickness=thick, color=color, spaceAfter=after)
 
 
-def sec_hdr(title, s):
+def sec_hdr(title, s, theme_colors=None):
     """Section header band with background color.
     
     Args:
         title: Section title text
         s: Styles dict from sty()
+        theme_colors: Dict of theme colors
     """
     t = Table([[Paragraph(title, s["sec"])]], colWidths=[PAGE_W])
     t.setStyle(TableStyle([
-        ("BACKGROUND",    (0,0),(-1,-1), _c("primary")),
+        ("BACKGROUND",    (0,0),(-1,-1), get_color(theme_colors, "primary")),
         ("TOPPADDING",    (0,0),(-1,-1), 10),
         ("BOTTOMPADDING", (0,0),(-1,-1), 10),
         ("LEFTPADDING",   (0,0),(-1,-1), 12),
@@ -91,7 +102,8 @@ def para_row(text, style):
     return t
 
 
-def field(label, s, extra_space=24, extra_lines=1, fillable=False, field_name=None, multiline=None):
+def field(label, s, extra_space=24, extra_lines=1, fillable=False, 
+          field_name=None, multiline=None, theme_colors=None):
     """Label + one or more write-on underlines (or fillable text fields).
     
     Args:
@@ -102,6 +114,7 @@ def field(label, s, extra_space=24, extra_lines=1, fillable=False, field_name=No
         fillable: Whether to generate interactive form field
         field_name: Unique name for fillable field
         multiline: Force multiline mode (auto-detected from extra_lines if None)
+        theme_colors: Dict of theme colors
     """
     cell = []
     if label:
@@ -113,11 +126,18 @@ def field(label, s, extra_space=24, extra_lines=1, fillable=False, field_name=No
             height = max(40, 22 * extra_lines)
         else:
             height = 20
-        cell.append(FillableTextField(field_name, PAGE_W - 4, height=height, multiline=is_multiline))
+        cell.append(FillableTextField(
+            field_name, PAGE_W - 4, height=height, 
+            multiline=is_multiline, theme_colors=theme_colors
+        ))
         cell.append(Spacer(1, extra_space - 10 if not is_multiline else 6))
     else:
         for _ in range(extra_lines):
-            cell.append(HRFlowable(width="100%", thickness=0.8, color=_c("primary_mid"), spaceAfter=extra_space))
+            cell.append(HRFlowable(
+                width="100%", thickness=0.8, 
+                color=get_color(theme_colors, "primary_mid"), 
+                spaceAfter=extra_space
+            ))
     
     t = Table([[cell]], colWidths=[PAGE_W])
     t.setStyle(TableStyle([
@@ -129,7 +149,8 @@ def field(label, s, extra_space=24, extra_lines=1, fillable=False, field_name=No
     return [t]
 
 
-def two_col(left_label, right_label, s, lw=None, rw=None, fillable=False, field_names=None):
+def two_col(left_label, right_label, s, lw=None, rw=None, 
+            fillable=False, field_names=None, theme_colors=None):
     """Two fields side by side.
     
     Args:
@@ -140,30 +161,33 @@ def two_col(left_label, right_label, s, lw=None, rw=None, fillable=False, field_
         rw: Right column width (default: half of PAGE_W minus gutter)
         fillable: Whether to generate interactive form fields
         field_names: Tuple of (left_field_name, right_field_name)
+        theme_colors: Dict of theme colors
     """
-    gutter = 0.25 * inch
+    gutter = GUTTER["two_col"]
     lw = lw or (PAGE_W - gutter) / 2
     rw = rw or (PAGE_W - gutter) / 2
     
     if fillable and field_names:
         cell_l = [
             Paragraph(left_label, s["lbl"]),
-            FillableTextField(field_names[0], lw - 4, height=18),
+            FillableTextField(field_names[0], lw - 4, height=18, theme_colors=theme_colors),
             Spacer(1, 10),
         ]
         cell_r = [
             Paragraph(right_label, s["lbl"]),
-            FillableTextField(field_names[1], rw - 4, height=18),
+            FillableTextField(field_names[1], rw - 4, height=18, theme_colors=theme_colors),
             Spacer(1, 10),
         ]
     else:
         cell_l = [
             Paragraph(left_label, s["lbl"]),
-            HRFlowable(width="100%", thickness=0.8, color=_c("primary_mid"), spaceAfter=20),
+            HRFlowable(width="100%", thickness=0.8, 
+                       color=get_color(theme_colors, "primary_mid"), spaceAfter=20),
         ]
         cell_r = [
             Paragraph(right_label, s["lbl"]),
-            HRFlowable(width="100%", thickness=0.8, color=_c("primary_mid"), spaceAfter=20),
+            HRFlowable(width="100%", thickness=0.8, 
+                       color=get_color(theme_colors, "primary_mid"), spaceAfter=20),
         ]
     
     t = Table([[cell_l, cell_r]], colWidths=[lw, rw + gutter])
@@ -179,7 +203,7 @@ def two_col(left_label, right_label, s, lw=None, rw=None, fillable=False, field_
     return t
 
 
-def three_col(labels, s, widths=None, fillable=False, field_names=None):
+def three_col(labels, s, widths=None, fillable=False, field_names=None, theme_colors=None):
     """Three fields side by side.
     
     Args:
@@ -188,8 +212,9 @@ def three_col(labels, s, widths=None, fillable=False, field_names=None):
         widths: List of three column widths (default: equal thirds)
         fillable: Whether to generate interactive form fields
         field_names: List of three field names
+        theme_colors: Dict of theme colors
     """
-    gutter = 0.1 * inch
+    gutter = GUTTER["three_col"]
     widths = widths or [(PAGE_W - 3 * gutter) / 3] * 3
     cells = []
     
@@ -197,14 +222,15 @@ def three_col(labels, s, widths=None, fillable=False, field_names=None):
         for lbl, w, fname in zip(labels, widths, field_names):
             cells.append([
                 Paragraph(lbl, s["lbl"]),
-                FillableTextField(fname, w - 4, height=18),
+                FillableTextField(fname, w - 4, height=18, theme_colors=theme_colors),
                 Spacer(1, 10),
             ])
     else:
         for lbl, w in zip(labels, widths):
             cells.append([
                 Paragraph(lbl, s["lbl"]),
-                HRFlowable(width="100%", thickness=0.8, color=_c("primary_mid"), spaceAfter=20),
+                HRFlowable(width="100%", thickness=0.8, 
+                           color=get_color(theme_colors, "primary_mid"), spaceAfter=20),
             ])
     
     col_widths = [w + gutter for w in widths]
@@ -219,28 +245,30 @@ def three_col(labels, s, widths=None, fillable=False, field_names=None):
     return t
 
 
-def pg_hdr(name, label, s):
+def pg_hdr(name, label, s, theme_colors=None):
     """Page header with business name and page indicator.
     
     Args:
         name: Business name
         label: Page label (e.g., "Page 2 of 5")
         s: Styles dict from sty()
+        theme_colors: Dict of theme colors
     """
     return [
         Paragraph(name, s["title"]),
         Paragraph(f"Client &amp; Pet Intake Form  \u00b7  {label}", s["subtitle"]),
-        hr(None, 1.5, 12),
+        hr(theme_colors, 1.5, 12),
     ]
 
 
-def auth_block(title, body, s):
+def auth_block(title, body, s, theme_colors=None):
     """Full-width authorization block with background.
     
     Args:
         title: Block title (rendered bold)
         body: Block body text
         s: Styles dict from sty()
+        theme_colors: Dict of theme colors
     """
     content = [
         Paragraph(f"<b>{title}</b>", s["sublbl"]),
@@ -248,7 +276,7 @@ def auth_block(title, body, s):
     ]
     t = Table([[content]], colWidths=[PAGE_W])
     t.setStyle(TableStyle([
-        ("BACKGROUND",    (0,0),(-1,-1), _c("accent_light")),
+        ("BACKGROUND",    (0,0),(-1,-1), get_color(theme_colors, "accent_light")),
         ("TOPPADDING",    (0,0),(-1,-1), 9),
         ("BOTTOMPADDING", (0,0),(-1,-1), 9),
         ("LEFTPADDING",   (0,0),(-1,-1), 12),
