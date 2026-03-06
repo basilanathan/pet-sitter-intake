@@ -11,10 +11,14 @@ contact: "sarah@homesweethomepets.com | (206) 555-PETS"
 service_type: general         # Full intake form with all sections
 num_pets: 2                   # Many clients have multiple pets
 fillable: true
-include_home_access: true     # Critical for in-home sitting
+
+# Section overrides (general defaults: all sections enabled except service_specific)
+# Using defaults - all sections enabled is perfect for in-home sitting
+# sections:
+#   home_access: true         # Critical for in-home sitting (default for general)
 
 # Output
-output: "screenshots/home_sweet_home_intake.pdf"
+output: "in_home_intake.pdf"
 
 # Branding
 theme: lavender               # Warm, welcoming feel

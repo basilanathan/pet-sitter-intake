@@ -11,18 +11,52 @@ contact: "(503) 555-1234 | hello@pawsitivepetcare.com"
 # Form Options
 service_type: general  # Options: general, boarding, walking, drop_in
 num_pets: 1            # Number of pet profile pages (1-5 recommended)
-include_home_access: true  # Include home access section for in-home sitting
 fillable: true         # Generate fillable PDF form fields (set false for print-only)
 
 # Output
-output: "client_intake_form.pdf"  # Default output filename
+# Default: ~/Downloads/client_intake_form.pdf
+# output: "client_intake_form.pdf"  # Override to save elsewhere
 
 # Color Theme
-# Built-in themes: lavender, ocean, forest, rose, sunset, neutral, midnight
+# Built-in themes: lavender, ocean, forest, rose, sunset, neutral, midnight,
+#                  summer, neon, berry, fiery, blush, deepblue
 # Run `python generate_form.py --list-themes` to see all options with color previews
 theme: lavender
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Section Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+# Each service_type has default sections. Override any here.
+# Run `python generate_form.py --list-sections` to see defaults.
+#
+# Section defaults by service type:
+#   Section              general  boarding  walking  drop_in
+#   ─────────────────────────────────────────────────────────
+#   home_access            ✓         —         —        ✓
+#   vaccinations           ✓         ✓         —        ✓
+#   health_medications     ✓         ✓         —        ✓
+#   feeding_daily_care     ✓         ✓         —        ✓
+#   behavior_temperament   ✓         ✓         ✓        ✓
+#   service_specific       —         ✓         ✓        ✓
+#
+# Override specific sections (uncomment to customize):
+# sections:
+#   home_access: true           # Keys, codes, WiFi, parking
+#   vaccinations: true          # Vaccine records table
+#   health_medications: true    # Allergies, conditions, meds
+#   feeding_daily_care: true    # Food, schedule, treats
+#   behavior_temperament: true  # Fears, triggers, commands
+#   service_specific: false     # Boarding/walking/drop-in details
+
+# Example: Walking service that also needs vaccinations
+# service_type: walking
+# sections:
+#   vaccinations: true
+#   health_medications: true
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Custom Colors (optional) - Only used when theme is set to "custom"
+# ─────────────────────────────────────────────────────────────────────────────
 # Uncomment and modify to create your own brand colors:
 # theme: custom
 # colors:
@@ -35,8 +69,10 @@ theme: lavender
 #   text_muted: "#6B6560"    # Labels, secondary text
 #   text_light: "#B0A9A4"    # Notes, hints, footer
 
-# Service Type Descriptions:
+# ─────────────────────────────────────────────────────────────────────────────
+# Service Type Descriptions
+# ─────────────────────────────────────────────────────────────────────────────
 # - general: Standard intake form with all sections
 # - boarding: Adds drop-off/pick-up times, items to bring checklist
-# - walking: Adds leash behavior, route preferences, walk duration
+# - walking: Minimal form with behavior + leash info (override sections to add more)
 # - drop_in: Adds per-visit task checklist, visit time preferences

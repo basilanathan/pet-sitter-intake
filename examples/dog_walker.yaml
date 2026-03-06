@@ -8,13 +8,18 @@ location: "Chicago, IL"
 contact: "alex@urbanpaws.dog | (312) 555-WALK"
 
 # Form settings
-service_type: walking         # Adds leash behavior, route preferences, duration
+service_type: walking         # Minimal form with behavior + leash behavior sections
 num_pets: 1
 fillable: true
-include_home_access: true     # Need key/code access for pickups
+
+# Section overrides (walking defaults: behavior + service_specific only)
+# We add home_access for pickup key codes, and vaccinations for group walks
+sections:
+  home_access: true           # Need key/code access for pickups
+  vaccinations: true          # Required for group walks at dog parks
 
 # Output
-output: "screenshots/urban_paws_intake.pdf"
+output: "dog_walker_intake.pdf"
 
 # Branding
 theme: ocean                  # Calming blue tones

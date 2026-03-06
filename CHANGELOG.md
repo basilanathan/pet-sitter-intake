@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.0] - 2026-03-03
+
+### Changed
+- **Default output path**: PDFs now save to `~/Downloads/` by default
+- Output directory is automatically created if it doesn't exist
+- Theme descriptions in skill.yaml prompt now show all 13 themes as numbered list
+
+### Improved
+- Documentation updated to reflect 13 available themes
+
+## [5.2.0] - 2026-03-03
+
+### Added
+- **6 new color themes**: summer, neon, berry, fiery, blush, deepblue
+- Total of 13 themes now available
+
+## [5.1.0] - 2026-03-03
+
+### Added
+- **Section configuration system**: Override which sections appear in the form
+- New CLI options: `--include-section`, `--exclude-section`, `--list-sections`
+- Section defaults by service type (walking now minimal by default, can add sections as needed)
+- Config file `sections:` block for persistent section overrides
+
+### Changed
+- Service type now sets sensible section defaults (walking excludes vaccinations/health/feeding by default)
+- Deprecated `--no-home-access` in favor of `--exclude-section home_access`
+- Updated example configs to demonstrate section overrides
+
 ## [5.0.0] - 2026-03-03
 
 ### Added

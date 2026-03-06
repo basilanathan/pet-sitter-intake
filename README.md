@@ -9,7 +9,7 @@ Generate professional, branded PDF client intake forms for pet sitting businesse
 ## Features
 
 - **Fillable PDF Fields** — Interactive text fields and checkboxes for digital completion
-- **7 Color Themes** — Match your business branding (lavender, ocean, forest, rose, sunset, neutral, midnight)
+- **13 Color Themes** — Match your business branding (run `--list-themes` to see all)
 - **Multi-Pet Support** — Generate forms with separate profiles for 1-10 pets
 - **Service Templates** — Specialized sections for boarding, dog walking, and drop-in visits
 - **Home Access Section** — Key codes, alarm info, WiFi, parking instructions
@@ -124,14 +124,56 @@ python scripts/generate_form.py --config config.yaml
 | `--location` | City/state for header | — |
 | `--contact` | Contact info for footer | — |
 | `--theme` | Color theme | lavender |
-| `--service-type` | Form template type | general |
+| `--service-type` | Form template type (sets section defaults) | general |
 | `--pets` | Number of pet profile pages | 1 |
 | `--fillable` | Enable fillable PDF fields | ✓ (default) |
 | `--no-fillable` | Generate print-only version | — |
-| `--no-home-access` | Omit home access section | — |
+| `--include-section` | Include a section (repeatable) | — |
+| `--exclude-section` | Exclude a section (repeatable) | — |
+| `--list-sections` | Show section defaults by service type | — |
 | `--config`, `-c` | Path to YAML config file | — |
-| `--output`, `-o` | Output PDF filename | client_intake_form.pdf |
+| `--output`, `-o` | Output PDF path | ~/Downloads/client_intake_form.pdf |
 | `--list-themes` | Show available themes | — |
+
+## Section Configuration
+
+Each `service_type` includes different sections by default. You can override any section.
+
+### Section Defaults by Service Type
+
+| Section | general | boarding | walking | drop_in |
+|---------|:-------:|:--------:|:-------:|:-------:|
+| `home_access` | ✓ | — | — | ✓ |
+| `vaccinations` | ✓ | ✓ | — | ✓ |
+| `health_medications` | ✓ | ✓ | — | ✓ |
+| `feeding_daily_care` | ✓ | ✓ | — | ✓ |
+| `behavior_temperament` | ✓ | ✓ | ✓ | ✓ |
+| `service_specific` | — | ✓ | ✓ | ✓ |
+
+### Override via CLI
+
+```bash
+# Walking service that needs vaccinations for group walks
+python scripts/generate_form.py --service-type walking --include-section vaccinations
+
+# General form without home access
+python scripts/generate_form.py --exclude-section home_access
+
+# Multiple overrides
+python scripts/generate_form.py --service-type walking \
+  --include-section vaccinations \
+  --include-section health_medications
+```
+
+### Override via Config File
+
+```yaml
+service_type: walking
+sections:
+  vaccinations: true
+  health_medications: true
+  home_access: true
+```
 
 ## Color Themes
 
@@ -144,6 +186,12 @@ python scripts/generate_form.py --config config.yaml
 | `sunset` | Orange & sky blue | Energetic, fun |
 | `neutral` | Gray & soft blue | Corporate, clean |
 | `midnight` | Slate & gold | Elegant, premium |
+| `summer` | Sky blue & golden yellow | Bright, cheerful |
+| `neon` | Coral & orange | Bold, modern |
+| `berry` | Peachy pink & salmon | Playful, feminine |
+| `fiery` | Coral & bright orange | Energetic, bold |
+| `blush` | Pink gradient | Soft, gentle |
+| `deepblue` | Blue gradient | Professional, trustworthy |
 
 ### Custom Colors
 

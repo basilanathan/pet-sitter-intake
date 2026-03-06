@@ -1,6 +1,6 @@
 # ClawHub Skill Manifest - Pet Sitter Intake Form Generator
 name: pet-sitter-intake
-version: 5.0.0
+version: 5.3.0
 author: clawhub-community
 description: >
   Generate professional PDF client intake forms for pet sitting businesses.
@@ -48,13 +48,66 @@ config:
     type: string
     required: false
     default: "lavender"
-    description: "Color theme: lavender, ocean, forest, rose, sunset, neutral, midnight"
+    description: "Color theme for the form"
+    options:
+      - value: "lavender"
+        label: "Lavender"
+        description: "Soft purple & peach — friendly, approachable (default)"
+      - value: "ocean"
+        label: "Ocean"
+        description: "Calming blue & sandy yellow — clean, professional"
+      - value: "forest"
+        label: "Forest"
+        description: "Natural sage green & gold — earthy, outdoorsy"
+      - value: "rose"
+        label: "Rose"
+        description: "Warm pink & tan — soft, nurturing"
+      - value: "sunset"
+        label: "Sunset"
+        description: "Coral orange & sky blue — energetic, fun"
+      - value: "neutral"
+        label: "Neutral"
+        description: "Professional gray & soft blue — corporate, clean"
+      - value: "midnight"
+        label: "Midnight"
+        description: "Elegant slate & warm gold — premium feel"
+      - value: "summer"
+        label: "Summer"
+        description: "Sky blue & golden yellow — bright, cheerful"
+      - value: "neon"
+        label: "Neon"
+        description: "Coral & vibrant orange — bold, modern"
+      - value: "berry"
+        label: "Berry"
+        description: "Peachy pink & salmon — playful, feminine"
+      - value: "fiery"
+        label: "Fiery"
+        description: "Coral & bright orange — energetic, bold"
+      - value: "blush"
+        label: "Blush"
+        description: "Soft pink gradient — gentle, delicate"
+      - value: "deepblue"
+        label: "Deep Blue"
+        description: "Professional blue gradient — trustworthy, corporate"
   
   service_type:
     type: string
     required: false
     default: "general"
-    description: "Form type: general, boarding, walking, drop_in"
+    description: "Form template type"
+    options:
+      - value: "general"
+        label: "General"
+        description: "Full intake form with all sections"
+      - value: "boarding"
+        label: "Boarding"
+        description: "Adds drop-off/pickup times, items checklist"
+      - value: "walking"
+        label: "Dog Walking"
+        description: "Minimal form with behavior + leash info"
+      - value: "drop_in"
+        label: "Drop-in Visits"
+        description: "Adds per-visit task checklist"
   
   num_pets:
     type: number
@@ -81,7 +134,21 @@ entryPoint:
     3. Services offered (suggest: Pet Sitting, Dog Walking, Boarding, Drop-in Visits)
     4. Location (city/state)
     5. Contact info (email/phone)
-    6. Color theme preference (show available: lavender, ocean, forest, rose, sunset, neutral, midnight)
+    6. Color theme preference - show as numbered list:
+       1. lavender (soft purple & peach) - default
+       2. ocean (blue & sandy yellow)
+       3. forest (green & gold)
+       4. rose (pink & tan)
+       5. sunset (orange & sky blue)
+       6. neutral (gray & soft blue)
+       7. midnight (slate & gold)
+       8. summer (sky blue & golden yellow)
+       9. neon (coral & vibrant orange)
+       10. berry (peachy pink & salmon)
+       11. fiery (coral & bright orange)
+       12. blush (soft pink gradient)
+       13. deepblue (professional blue gradient)
+       User can enter number (1-13) or theme name.
     7. Service type if specific (boarding, walking, drop-in, or general)
     8. Number of pets (if they have multiple pets)
     
@@ -96,12 +163,13 @@ entryPoint:
       --theme "USER_INPUT" \
       --service-type "USER_INPUT" \
       --pets NUMBER \
-      --output "/mnt/user-data/outputs/client_intake_form.pdf"
+      --output "$HOME/Downloads/client_intake_form.pdf"
     ```
     
     Present the generated PDF to the user and explain:
     - The form has fillable fields they can type into
     - They can also print it for handwritten responses
+    - The PDF is saved to their Downloads folder
     - Suggest they customize the theme to match their branding
 
 triggers:

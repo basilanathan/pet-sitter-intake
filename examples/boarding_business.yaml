@@ -11,10 +11,15 @@ contact: "(303) 555-7890 | stay@cozycanine.com | cozycanine.com"
 service_type: boarding        # Adds drop-off/pickup times, items checklist
 num_pets: 1                   # Change to 2-3 for multi-pet households
 fillable: true                # Clients fill out digitally before arrival
-include_home_access: false    # Not needed for facility-based boarding
+
+# Section overrides (boarding defaults: no home_access, all others enabled)
+# Using defaults here - home_access is already false for boarding
+# Uncomment to customize:
+# sections:
+#   home_access: false        # Not needed for facility-based boarding
 
 # Output
-output: "screenshots/cozy_canine_intake.pdf"
+output: "boarding_intake.pdf"
 
 # Branding
 theme: forest                 # Natural green tones

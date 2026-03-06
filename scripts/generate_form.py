@@ -31,6 +31,14 @@ from reportlab.platypus import (
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.pdfbase import pdfform
 
+def get_default_output_path():
+    """Get default output path in user's Downloads folder."""
+    downloads = Path.home() / "Downloads"
+    return str(downloads / "client_intake_form.pdf")
+
+
+DEFAULT_OUTPUT = get_default_output_path()
+
 DEFAULT_CONFIG = {
     "business_name": "Your Business Name",
     "sitter_name": "",
@@ -39,12 +47,99 @@ DEFAULT_CONFIG = {
     "contact": "",
     "service_type": "general",  # general, boarding, walking, drop_in
     "num_pets": 1,
-    "include_home_access": True,
     "fillable": True,  # Generate fillable PDF fields by default
     "theme": "lavender",  # Color theme name or "custom"
     "colors": {},  # Custom color overrides (when theme is "custom")
-    "output": "client_intake_form.pdf",  # Output filename
+    "output": DEFAULT_OUTPUT,  # Output filename (default: ~/Downloads/)
+    "sections": {},  # Section overrides (merged with SECTION_DEFAULTS)
 }
+
+# Section defaults by service type
+# Users can override any of these in config or via CLI
+SECTION_DEFAULTS = {
+    "general": {
+        "home_access": True,
+        "vaccinations": True,
+        "health_medications": True,
+        "feeding_daily_care": True,
+        "behavior_temperament": True,
+        "service_specific": False,
+    },
+    "boarding": {
+        "home_access": False,
+        "vaccinations": True,
+        "health_medications": True,
+        "feeding_daily_care": True,
+        "behavior_temperament": True,
+        "service_specific": True,
+    },
+    "walking": {
+        "home_access": False,
+        "vaccinations": False,
+        "health_medications": False,
+        "feeding_daily_care": False,
+        "behavior_temperament": True,
+        "service_specific": True,
+    },
+    "drop_in": {
+        "home_access": True,
+        "vaccinations": True,
+        "health_medications": True,
+        "feeding_daily_care": True,
+        "behavior_temperament": True,
+        "service_specific": True,
+    },
+}
+
+SECTION_NAMES = list(SECTION_DEFAULTS["general"].keys())
+
+
+def get_section_config(config):
+    """Get final section configuration by merging defaults with user overrides."""
+    service_type = config.get("service_type", "general")
+    defaults = SECTION_DEFAULTS.get(service_type, SECTION_DEFAULTS["general"]).copy()
+    
+    # Legacy support: include_home_access overrides sections.home_access
+    if "include_home_access" in config:
+        defaults["home_access"] = config["include_home_access"]
+    
+    # Apply user section overrides
+    user_sections = config.get("sections", {})
+    for section, enabled in user_sections.items():
+        if section in defaults:
+            defaults[section] = enabled
+        else:
+            print(f"⚠️  Unknown section '{section}', ignoring. Valid: {', '.join(SECTION_NAMES)}")
+    
+    return defaults
+
+
+def list_sections(service_type=None):
+    """Print section defaults for each service type."""
+    print("\nSection defaults by service type:")
+    print("-" * 70)
+    
+    # Header
+    print(f"{'Section':<22} {'general':^10} {'boarding':^10} {'walking':^10} {'drop_in':^10}")
+    print("-" * 70)
+    
+    for section in SECTION_NAMES:
+        row = f"{section:<22}"
+        for stype in ["general", "boarding", "walking", "drop_in"]:
+            val = SECTION_DEFAULTS[stype][section]
+            mark = "✓" if val else "—"
+            row += f" {mark:^10}"
+        print(row)
+    
+    print("-" * 70)
+    print("\nOverride in config.yaml:")
+    print("  sections:")
+    print("    vaccinations: true")
+    print("    health_medications: true")
+    print("\nOr via CLI:")
+    print("  --include-section vaccinations --include-section health_medications")
+    print("  --exclude-section home_access")
+    print()
 
 
 # ── Color Themes ───────────────────────────────────────────────────────────────
@@ -118,6 +213,73 @@ THEMES = {
         "text": "#2A2D35",          # Near-black blue
         "text_muted": "#555A68",    # Muted slate
         "text_light": "#888D9A",    # Light slate
+    },
+    # ── New themes ─────────────────────────────────────────────────────────
+    "summer": {
+        # Refreshing Summer Fun - 8ECAE6, 219EBC, 023047, FFB703, FB8500
+        "primary": "#8ECAE6",       # Sky blue
+        "primary_mid": "#219EBC",   # Teal
+        "primary_dark": "#023047",  # Deep navy
+        "accent": "#FFB703",        # Golden yellow
+        "accent_light": "#FFF8E7",  # Warm cream
+        "text": "#023047",          # Deep navy
+        "text_muted": "#2A5A6C",    # Muted teal
+        "text_light": "#6A9AAC",    # Soft blue-gray
+    },
+    "neon": {
+        # Neon Night Sky - FF5B46, FE8405, FBA625, 002F5D, 001B39
+        "primary": "#FFE4DC",       # Light coral (derived for readability)
+        "primary_mid": "#FE8405",   # Vibrant orange
+        "primary_dark": "#002F5D",  # Deep navy
+        "accent": "#FBA625",        # Golden orange
+        "accent_light": "#FFF5E6",  # Warm cream
+        "text": "#001B39",          # Darkest navy
+        "text_muted": "#2A4A6A",    # Muted navy
+        "text_light": "#6A8A9A",    # Soft blue-gray
+    },
+    "berry": {
+        # Bold Berry - F9DBBD, FFA5AB, DA627D, A53860, 450920
+        "primary": "#F9DBBD",       # Light peachy pink
+        "primary_mid": "#DA627D",   # Rose berry
+        "primary_dark": "#A53860",  # Deep berry
+        "accent": "#FFA5AB",        # Salmon pink
+        "accent_light": "#FEF0ED",  # Blush white
+        "text": "#450920",          # Dark burgundy
+        "text_muted": "#6B3A4A",    # Muted wine
+        "text_light": "#A86878",    # Dusty rose
+    },
+    "fiery": {
+        # Fiery Palette - 5F0F40, 9A031E, FB8B24, E36414, 0F4C5C
+        "primary": "#FFE8DC",       # Light coral (derived for readability)
+        "primary_mid": "#E36414",   # Burnt orange
+        "primary_dark": "#9A031E",  # Deep red
+        "accent": "#FB8B24",        # Bright orange
+        "accent_light": "#FFF5EE",  # Warm cream
+        "text": "#5F0F40",          # Dark maroon
+        "text_muted": "#0F4C5C",    # Dark teal
+        "text_light": "#4A7A8A",    # Muted teal
+    },
+    "blush": {
+        # Soft Pink Delight - FFE5EC, FFC2D1, FFB3C6, FF8FAB, FB6F92
+        "primary": "#FFC2D1",       # Light pink
+        "primary_mid": "#FF8FAB",   # Medium pink
+        "primary_dark": "#FB6F92",  # Vibrant pink
+        "accent": "#FFB3C6",        # Soft pink
+        "accent_light": "#FFE5EC",  # Palest pink
+        "text": "#4A2A3A",          # Dark mauve
+        "text_muted": "#7A5A6A",    # Muted plum
+        "text_light": "#AA8A9A",    # Dusty pink
+    },
+    "deepblue": {
+        # Midnight Blues - 3E92CC, 2A628F, 13293D, 16324F, 18435A
+        "primary": "#D4E8F2",       # Pale blue
+        "primary_mid": "#3E92CC",   # Bright blue
+        "primary_dark": "#2A628F",  # Medium navy
+        "accent": "#5AA8D8",        # Sky blue
+        "accent_light": "#E8F4FA",  # Ice blue
+        "text": "#13293D",          # Deep navy
+        "text_muted": "#16324F",    # Dark blue
+        "text_light": "#4A6A8A",    # Slate blue
     },
 }
 
@@ -864,6 +1026,13 @@ def build_form(config, output_path):
     """Build the intake form PDF from config dict."""
     global THEME_COLORS
     
+    # Expand ~ and ensure output directory exists
+    output_path = os.path.expanduser(output_path)
+    output_dir = os.path.dirname(output_path)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+        print(f"📁 Created directory: {output_dir}")
+
     # Initialize theme colors before anything else
     THEME_COLORS = get_theme_colors(config)
     
@@ -874,8 +1043,10 @@ def build_form(config, output_path):
     contact = config.get("contact", DEFAULT_CONFIG["contact"])
     service_type = config.get("service_type", DEFAULT_CONFIG["service_type"])
     num_pets = config.get("num_pets", DEFAULT_CONFIG["num_pets"])
-    include_home_access = config.get("include_home_access", DEFAULT_CONFIG["include_home_access"])
     fillable = config.get("fillable", DEFAULT_CONFIG["fillable"])
+    
+    # Get section configuration (defaults + user overrides)
+    sections = get_section_config(config)
     
     s = sty()
     doc = SimpleDocTemplate(output_path, pagesize=letter,
@@ -883,12 +1054,27 @@ def build_form(config, output_path):
                             topMargin=0.6*inch,  bottomMargin=0.6*inch)
     story = []
 
-    # Calculate total pages
-    base_pages = 4
-    if include_home_access:
+    # Calculate total pages based on enabled sections
+    base_pages = 1  # Page 1: Owner info (always included)
+    if sections["home_access"]:
         base_pages += 1
-    extra_pet_pages = max(0, num_pets - 1) * 2  # 2 pages per additional pet
-    total_pages = base_pages + extra_pet_pages
+    
+    # Pet pages: profile/vax page + health/behavior/feeding page per pet
+    # But some sections might be disabled
+    pet_page_1_sections = ["vaccinations"]  # Pet profile always included
+    pet_page_2_sections = ["health_medications", "behavior_temperament", "feeding_daily_care"]
+    
+    pages_per_pet = 1  # Pet profile page always exists
+    if any(sections.get(s, True) for s in pet_page_2_sections):
+        pages_per_pet = 2  # Add health/behavior page if any section enabled
+    
+    base_pages += pages_per_pet * num_pets
+    
+    if sections["service_specific"] and service_type != "general":
+        base_pages += 1
+    
+    base_pages += 1  # Authorization page (always included)
+    total_pages = base_pages
 
     # ══════════════════════════════════════════════════════════════════════
     # PAGE 1 — PET OWNER INFORMATION
@@ -981,7 +1167,7 @@ def build_form(config, output_path):
     # HOME ACCESS SECTION (if enabled)
     # ══════════════════════════════════════════════════════════════════════
     current_page = 1
-    if include_home_access:
+    if sections["home_access"]:
         story.append(PageBreak())
         current_page += 1
         story += pg_hdr(business_name, f"Page {current_page} of {total_pages}", s)
@@ -1037,174 +1223,185 @@ def build_form(config, output_path):
                              field_names=[f"{prefix}flea_product", f"{prefix}flea_date"]))
         story.append(sp(0.15))
 
-        # VACCINATIONS
-        story += [sec_hdr("VACCINATIONS", s), sp(0.14)]
-        story.append(para_row(
-            "Proof of current vaccinations may be required. Please attach vet records if available.",
-            s["note"]
-        ))
+        # VACCINATIONS (if enabled)
+        if sections["vaccinations"]:
+            story += [sec_hdr("VACCINATIONS", s), sp(0.14)]
+            story.append(para_row(
+                "Proof of current vaccinations may be required. Please attach vet records if available.",
+                s["note"]
+            ))
 
-        vax_col_widths = [2.8*inch, 2.6*inch, 1.6*inch]
-        vax_data = [[
-            Paragraph("Vaccine", s["th"]),
-            Paragraph("Up to Date?", s["th"]),
-            Paragraph("Expiration Date", s["th"]),
-        ]]
+            vax_col_widths = [2.8*inch, 2.6*inch, 1.6*inch]
+            vax_data = [[
+                Paragraph("Vaccine", s["th"]),
+                Paragraph("Up to Date?", s["th"]),
+                Paragraph("Expiration Date", s["th"]),
+            ]]
+            
+            vaccines = [
+                ("Rabies", "rabies", ["Yes", "No", "Exempt"]),
+                ("DHPP / DA2PP", "dhpp", ["Yes", "No", "N/A"]),
+                ("Bordetella (Kennel Cough)", "bordetella", ["Yes", "No", "N/A"]),
+                ("Feline FVRCP", "fvrcp", ["Yes", "No", "N/A"]),
+                ("Feline Leukemia", "felv", ["Yes", "No", "N/A"]),
+                ("Canine Influenza", "canine_flu", ["Yes", "No", "N/A"]),
+                ("Other", "other_vax", ["Yes", "No"]),
+            ]
+            
+            if fillable:
+                for vax_name, vax_key, options in vaccines:
+                    field_base = f"{prefix}vax_{vax_key}"
+                    
+                    # Create inline checkboxes for Yes/No/Exempt|N/A
+                    checkbox_row = VaxCheckboxRow(field_base, options)
+                    
+                    # Expiration date text field
+                    exp_field = FillableTextField(f"{field_base}_exp", vax_col_widths[2] - 16, height=18)
+                    
+                    # For "Other" vaccine, make name fillable too
+                    if vax_key == "other_vax":
+                        name_cell = [
+                            Paragraph("Other: ", s["td"]),
+                            FillableTextField(f"{prefix}vax_other_name", vax_col_widths[0] - 50, height=16),
+                        ]
+                        name_table = Table([name_cell], colWidths=[0.5*inch, vax_col_widths[0] - 50])
+                        name_table.setStyle(TableStyle([
+                            ("LEFTPADDING", (0,0), (-1,-1), 0),
+                            ("RIGHTPADDING", (0,0), (-1,-1), 0),
+                            ("TOPPADDING", (0,0), (-1,-1), 0),
+                            ("BOTTOMPADDING", (0,0), (-1,-1), 0),
+                            ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                        ]))
+                        vax_data.append([name_table, checkbox_row, exp_field])
+                    else:
+                        vax_data.append([Paragraph(vax_name, s["td"]), checkbox_row, exp_field])
+            else:
+                for vax_name, vax_key, options in vaccines:
+                    opts_str = "   /   ".join(options)
+                    display_name = vax_name if vax_key != "other_vax" else "Other: _______________"
+                    vax_data.append([
+                        Paragraph(display_name, s["td"]), 
+                        Paragraph(opts_str, s["td"]), 
+                        Paragraph("", s["td"])
+                    ])
+
+            vt = Table(vax_data, colWidths=vax_col_widths)
+            vt.setStyle(TableStyle([
+                ("BACKGROUND",    (0,0), (-1,0),  _c("primary")),
+                ("GRID",          (0,0), (-1,-1), 0.4, _c("primary_mid")),
+                ("ROWBACKGROUNDS",(0,1), (-1,-1), [_c("accent_light"), WHITE]),
+                ("LEFTPADDING",   (0,0), (-1,-1), 8),
+                ("TOPPADDING",    (0,0), (-1,-1), 8),
+                ("BOTTOMPADDING", (0,0), (-1,-1), 8),
+                ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
+            ]))
+            story.append(vt)
+            if not fillable:
+                story.append(para_row("Circle the appropriate response in each row.", s["note"]))
+
+        # PAGE — HEALTH, BEHAVIOR & CARE (if any of these sections enabled)
+        has_page2_content = (sections["health_medications"] or 
+                             sections["behavior_temperament"] or 
+                             sections["feeding_daily_care"])
         
-        vaccines = [
-            ("Rabies", "rabies", ["Yes", "No", "Exempt"]),
-            ("DHPP / DA2PP", "dhpp", ["Yes", "No", "N/A"]),
-            ("Bordetella (Kennel Cough)", "bordetella", ["Yes", "No", "N/A"]),
-            ("Feline FVRCP", "fvrcp", ["Yes", "No", "N/A"]),
-            ("Feline Leukemia", "felv", ["Yes", "No", "N/A"]),
-            ("Canine Influenza", "canine_flu", ["Yes", "No", "N/A"]),
-            ("Other", "other_vax", ["Yes", "No"]),
-        ]
+        if has_page2_content:
+            story.append(PageBreak())
+            current_page += 1
+            story += pg_hdr(business_name, f"Page {current_page} of {total_pages}", s)
         
-        if fillable:
-            for vax_name, vax_key, options in vaccines:
-                field_base = f"{prefix}vax_{vax_key}"
-                
-                # Create inline checkboxes for Yes/No/Exempt|N/A
-                checkbox_row = VaxCheckboxRow(field_base, options)
-                
-                # Expiration date text field
-                exp_field = FillableTextField(f"{field_base}_exp", vax_col_widths[2] - 16, height=18)
-                
-                # For "Other" vaccine, make name fillable too
-                if vax_key == "other_vax":
-                    name_cell = [
-                        Paragraph("Other: ", s["td"]),
-                        FillableTextField(f"{prefix}vax_other_name", vax_col_widths[0] - 50, height=16),
-                    ]
-                    name_table = Table([name_cell], colWidths=[0.5*inch, vax_col_widths[0] - 50])
-                    name_table.setStyle(TableStyle([
-                        ("LEFTPADDING", (0,0), (-1,-1), 0),
-                        ("RIGHTPADDING", (0,0), (-1,-1), 0),
-                        ("TOPPADDING", (0,0), (-1,-1), 0),
-                        ("BOTTOMPADDING", (0,0), (-1,-1), 0),
-                        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                    ]))
-                    vax_data.append([name_table, checkbox_row, exp_field])
-                else:
-                    vax_data.append([Paragraph(vax_name, s["td"]), checkbox_row, exp_field])
-        else:
-            for vax_name, vax_key, options in vaccines:
-                opts_str = "   /   ".join(options)
-                display_name = vax_name if vax_key != "other_vax" else "Other: _______________"
-                vax_data.append([
-                    Paragraph(display_name, s["td"]), 
-                    Paragraph(opts_str, s["td"]), 
-                    Paragraph("", s["td"])
-                ])
+        # HEALTH & MEDICATIONS (if enabled)
+        if sections["health_medications"]:
+            story += [sec_hdr(f"HEALTH & MEDICATIONS{pet_label}", s), sp(0.2)]
 
-        vt = Table(vax_data, colWidths=vax_col_widths)
-        vt.setStyle(TableStyle([
-            ("BACKGROUND",    (0,0), (-1,0),  _c("primary")),
-            ("GRID",          (0,0), (-1,-1), 0.4, _c("primary_mid")),
-            ("ROWBACKGROUNDS",(0,1), (-1,-1), [_c("accent_light"), WHITE]),
-            ("LEFTPADDING",   (0,0), (-1,-1), 8),
-            ("TOPPADDING",    (0,0), (-1,-1), 8),
-            ("BOTTOMPADDING", (0,0), (-1,-1), 8),
-            ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
-        ]))
-        story.append(vt)
-        if not fillable:
-            story.append(para_row("Circle the appropriate response in each row.", s["note"]))
+            story += field("Known Allergies or Sensitivities", s, extra_space=26, fillable=fillable,
+                           field_name=f"{prefix}allergies", multiline=True)
+            story += field("Medical Conditions / Diagnoses", s, extra_space=26, fillable=fillable,
+                           field_name=f"{prefix}conditions", multiline=True)
+            story.append(sp(0.1))
+            story.append(para_row("Current Medications  <i>(name, dose, frequency, food instructions)</i>", s["lbl"]))
+            story.append(sp(0.1))
 
-        # PAGE — HEALTH, BEHAVIOR & CARE
-        story.append(PageBreak())
-        current_page += 1
-        story += pg_hdr(business_name, f"Page {current_page} of {total_pages}", s)
-        story += [sec_hdr(f"HEALTH & MEDICATIONS{pet_label}", s), sp(0.2)]
+            med_col_widths = [2.2*inch, 1.2*inch, 1.3*inch, 2.3*inch]
+            med_data = [[
+                Paragraph("Medication Name", s["th"]),
+                Paragraph("Dosage", s["th"]),
+                Paragraph("Frequency", s["th"]),
+                Paragraph("Special Instructions", s["th"]),
+            ]]
+            
+            if fillable:
+                med_fields = ["med_name", "med_dosage", "med_frequency", "med_instructions"]
+                for row_idx in range(3):
+                    row = []
+                    for col_idx, (fname, width) in enumerate(zip(med_fields, med_col_widths)):
+                        field_name = f"{prefix}{fname}_{row_idx+1}"
+                        row.append(FillableTextField(field_name, width - 16, height=20))
+                    med_data.append(row)
+            else:
+                for _ in range(3):
+                    med_data.append([Paragraph("", s["td"])] * 4)
+            
+            mt = Table(med_data, colWidths=med_col_widths)
+            mt.setStyle(TableStyle([
+                ("BACKGROUND",    (0,0), (-1,0),  _c("primary")),
+                ("GRID",          (0,0), (-1,-1), 0.4, _c("primary_mid")),
+                ("ROWBACKGROUNDS",(0,1), (-1,-1), [_c("accent_light"), WHITE, _c("accent_light")]),
+                ("LEFTPADDING",   (0,0), (-1,-1), 8),
+                ("TOPPADDING",    (0,0), (-1,-1), 14),
+                ("BOTTOMPADDING", (0,0), (-1,-1), 14),
+                ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
+            ]))
+            story.append(mt)
+            story.append(sp(0.2))
 
-        story += field("Known Allergies or Sensitivities", s, extra_space=26, fillable=fillable,
-                       field_name=f"{prefix}allergies", multiline=True)
-        story += field("Medical Conditions / Diagnoses", s, extra_space=26, fillable=fillable,
-                       field_name=f"{prefix}conditions", multiline=True)
-        story.append(sp(0.1))
-        story.append(para_row("Current Medications  <i>(name, dose, frequency, food instructions)</i>", s["lbl"]))
-        story.append(sp(0.1))
+        # BEHAVIOR & TEMPERAMENT (if enabled)
+        if sections["behavior_temperament"]:
+            story += build_pet_behavior_section(s, pet_num, fillable=fillable)
+            story.append(sp(0.15))
+            
+            # Potty section
+            story += build_potty_section(s, pet_num, fillable=fillable)
+            story.append(sp(0.15))
+            
+            # Sleep & crate section
+            story += build_sleep_crate_section(s, pet_num, fillable=fillable)
+            story.append(sp(0.2))
 
-        med_col_widths = [2.2*inch, 1.2*inch, 1.3*inch, 2.3*inch]
-        med_data = [[
-            Paragraph("Medication Name", s["th"]),
-            Paragraph("Dosage", s["th"]),
-            Paragraph("Frequency", s["th"]),
-            Paragraph("Special Instructions", s["th"]),
-        ]]
-        
-        if fillable:
-            med_fields = ["med_name", "med_dosage", "med_frequency", "med_instructions"]
-            for row_idx in range(3):
-                row = []
-                for col_idx, (fname, width) in enumerate(zip(med_fields, med_col_widths)):
-                    field_name = f"{prefix}{fname}_{row_idx+1}"
-                    row.append(FillableTextField(field_name, width - 16, height=20))
-                med_data.append(row)
-        else:
-            for _ in range(3):
-                med_data.append([Paragraph("", s["td"])] * 4)
-        
-        mt = Table(med_data, colWidths=med_col_widths)
-        mt.setStyle(TableStyle([
-            ("BACKGROUND",    (0,0), (-1,0),  _c("primary")),
-            ("GRID",          (0,0), (-1,-1), 0.4, _c("primary_mid")),
-            ("ROWBACKGROUNDS",(0,1), (-1,-1), [_c("accent_light"), WHITE, _c("accent_light")]),
-            ("LEFTPADDING",   (0,0), (-1,-1), 8),
-            ("TOPPADDING",    (0,0), (-1,-1), 14),
-            ("BOTTOMPADDING", (0,0), (-1,-1), 14),
-            ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
-        ]))
-        story.append(mt)
-        story.append(sp(0.2))
+        # FEEDING & DAILY CARE (if enabled)
+        if sections["feeding_daily_care"]:
+            story += [sec_hdr(f"FEEDING & DAILY CARE{pet_label}", s), sp(0.2)]
+            story.append(two_col("Food Brand / Type", "Amount per Meal", s, fillable=fillable,
+                                 field_names=[f"{prefix}food_brand", f"{prefix}food_amount"]))
+            story += field("Where is food stored?", s, extra_space=22, fillable=fillable,
+                           field_name=f"{prefix}food_location")
 
-        # Behavior & temperament
-        story += build_pet_behavior_section(s, pet_num, fillable=fillable)
-        story.append(sp(0.15))
-        
-        # Potty section
-        story += build_potty_section(s, pet_num, fillable=fillable)
-        story.append(sp(0.15))
-        
-        # Sleep & crate section
-        story += build_sleep_crate_section(s, pet_num, fillable=fillable)
-        story.append(sp(0.2))
+            story.append(para_row("Feeding Schedule:", s["lbl"]))
+            if fillable:
+                story.append(FillableCheckboxRow(f"{prefix}feeding_schedule",
+                    ["Once daily", "Twice daily", "Three times daily", "Free-fed"], per_row=4))
+            else:
+                story.append(CheckboxRow(["Once daily", "Twice daily", "Three times daily", "Free-fed"], per_row=4))
+            story.append(sp(0.16))
 
-        # FEEDING & DAILY CARE
-        story += [sec_hdr(f"FEEDING & DAILY CARE{pet_label}", s), sp(0.2)]
-        story.append(two_col("Food Brand / Type", "Amount per Meal", s, fillable=fillable,
-                             field_names=[f"{prefix}food_brand", f"{prefix}food_amount"]))
-        story += field("Where is food stored?", s, extra_space=22, fillable=fillable,
-                       field_name=f"{prefix}food_location")
+            story.append(para_row("Treats:", s["lbl"]))
+            if fillable:
+                story.append(FillableCheckboxRow(f"{prefix}treats",
+                    ["Yes — allowed", "No — not allowed"], per_row=2))
+            else:
+                story.append(CheckboxRow(["Yes — allowed", "No — not allowed"], per_row=2))
+            story.append(sp(0.1))
 
-        story.append(para_row("Feeding Schedule:", s["lbl"]))
-        if fillable:
-            story.append(FillableCheckboxRow(f"{prefix}feeding_schedule",
-                ["Once daily", "Twice daily", "Three times daily", "Free-fed"], per_row=4))
-        else:
-            story.append(CheckboxRow(["Once daily", "Twice daily", "Three times daily", "Free-fed"], per_row=4))
-        story.append(sp(0.16))
-
-        story.append(para_row("Treats:", s["lbl"]))
-        if fillable:
-            story.append(FillableCheckboxRow(f"{prefix}treats",
-                ["Yes — allowed", "No — not allowed"], per_row=2))
-        else:
-            story.append(CheckboxRow(["Yes — allowed", "No — not allowed"], per_row=2))
-        story.append(sp(0.1))
-
-        story += field("If yes, treat brand / type & where stored:", s, extra_space=22, fillable=fillable,
-                       field_name=f"{prefix}treat_info")
-        story += field("Exercise needs (walk duration, activity level)", s, extra_space=22, fillable=fillable,
-                       field_name=f"{prefix}exercise", multiline=True)
-        story += field("Any other special care instructions", s, extra_lines=2, fillable=fillable,
-                       field_name=f"{prefix}special_instructions")
+            story += field("If yes, treat brand / type & where stored:", s, extra_space=22, fillable=fillable,
+                           field_name=f"{prefix}treat_info")
+            story += field("Exercise needs (walk duration, activity level)", s, extra_space=22, fillable=fillable,
+                           field_name=f"{prefix}exercise", multiline=True)
+            story += field("Any other special care instructions", s, extra_lines=2, fillable=fillable,
+                           field_name=f"{prefix}special_instructions")
 
     # ══════════════════════════════════════════════════════════════════════
-    # SERVICE-SPECIFIC SECTION (if not general)
+    # SERVICE-SPECIFIC SECTION (if enabled and not general)
     # ══════════════════════════════════════════════════════════════════════
-    if service_type != "general":
+    if sections["service_specific"] and service_type != "general":
         story.append(PageBreak())
         current_page += 1
         story += pg_hdr(business_name, f"Page {current_page} of {total_pages}", s)
@@ -1289,6 +1486,13 @@ def build_form(config, output_path):
     print(f"   Pages: {total_pages}, Pets: {num_pets}, Service type: {service_type}, Theme: {theme_name}")
     if fillable:
         print("   📝 Fillable PDF fields enabled")
+    
+    # Show which sections are included
+    enabled = [s for s, v in sections.items() if v]
+    disabled = [s for s, v in sections.items() if not v]
+    if disabled:
+        print(f"   Sections: {', '.join(enabled)}")
+        print(f"   Excluded: {', '.join(disabled)}")
 
 
 if __name__ == "__main__":
@@ -1300,7 +1504,9 @@ Examples:
   %(prog)s --business-name "Pawsitive Care" --contact "555-1234"
   %(prog)s --config my_business.yaml --fillable
   %(prog)s --pets 2 --service-type boarding
-  %(prog)s --config config.yaml --pets 3 --output multi_pet_form.pdf
+  %(prog)s --service-type walking --include-section vaccinations
+  %(prog)s --service-type general --exclude-section home_access
+  %(prog)s --list-sections
         """
     )
     
@@ -1322,9 +1528,19 @@ Examples:
     
     # Form options
     p.add_argument("--service-type", choices=["general", "boarding", "walking", "drop_in"],
-                   help="Service type for specialized sections")
+                   help="Service type for specialized sections (sets section defaults)")
     p.add_argument("--pets", type=int, metavar="N",
                    help="Number of pet profile pages to generate (default: 1)")
+    
+    # Section overrides
+    p.add_argument("--include-section", action="append", dest="include_sections",
+                   metavar="NAME", choices=SECTION_NAMES,
+                   help=f"Include a section (can repeat). Options: {', '.join(SECTION_NAMES)}")
+    p.add_argument("--exclude-section", action="append", dest="exclude_sections",
+                   metavar="NAME", choices=SECTION_NAMES,
+                   help=f"Exclude a section (can repeat). Options: {', '.join(SECTION_NAMES)}")
+    p.add_argument("--list-sections", action="store_true",
+                   help="Show section defaults by service type and exit")
     
     # Theme options
     theme_names = list(THEMES.keys())
@@ -1337,18 +1553,24 @@ Examples:
                    help="Generate fillable PDF form fields (default: enabled)")
     p.add_argument("--no-fillable", action="store_true",
                    help="Generate print-only form (static lines instead of fields)")
+    
+    # Legacy flag (kept for backward compatibility, maps to sections.home_access)
     p.add_argument("--no-home-access", action="store_true",
-                   help="Omit home access section")
+                   help="Omit home access section (legacy; prefer --exclude-section home_access)")
     
     # Output
-    p.add_argument("--output", "-o", default="client_intake_form.pdf", metavar="FILE",
-                   help="Output PDF filename (default: client_intake_form.pdf)")
+    p.add_argument("--output", "-o", default=DEFAULT_OUTPUT, metavar="FILE",
+                   help=f"Output PDF path (default: ~/Downloads/client_intake_form.pdf)")
     
     args = p.parse_args()
     
-    # Handle --list-themes
+    # Handle info-only flags
     if args.list_themes:
         list_themes()
+        exit(0)
+    
+    if args.list_sections:
+        list_sections()
         exit(0)
     
     # Load config file first, then override with CLI args
@@ -1375,15 +1597,26 @@ Examples:
         config["fillable"] = False
     elif args.fillable:
         config["fillable"] = True
+    
+    # Legacy --no-home-access support
     if args.no_home_access:
         config["include_home_access"] = False
+    
+    # Apply section overrides from CLI
+    if args.include_sections or args.exclude_sections:
+        if "sections" not in config:
+            config["sections"] = {}
+        for section in (args.include_sections or []):
+            config["sections"][section] = True
+        for section in (args.exclude_sections or []):
+            config["sections"][section] = False
     
     # Determine output path: CLI arg > config file > default
     # Only override config output if user explicitly passed --output
     # (check if it differs from the argparse default)
-    if args.output != "client_intake_form.pdf":
+    if args.output != DEFAULT_OUTPUT:
         output_path = args.output
     else:
-        output_path = config.get("output", "client_intake_form.pdf")
+        output_path = config.get("output", DEFAULT_OUTPUT)
     
     build_form(config, output_path)

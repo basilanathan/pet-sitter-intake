@@ -1,6 +1,6 @@
 ---
 name: pet-sitter-intake
-version: 5.0.0
+version: 5.3.0
 description: >
   Generate professional PDF client intake forms for pet sitting businesses.
   Use when a pet sitter, dog walker, pet boarder, or pet care professional needs
@@ -38,7 +38,7 @@ Activate when the user:
 | Feature | Description |
 |---------|-------------|
 | **Fillable PDF Fields** | Interactive text fields and checkboxes for digital completion |
-| **7 Color Themes** | lavender, ocean, forest, rose, sunset, neutral, midnight |
+| **13 Color Themes** | lavender, ocean, forest, rose, sunset, neutral, midnight, summer, neon, berry, fiery, blush, deepblue |
 | **Multi-Pet Support** | Generate forms with 1-10 pet profile sections |
 | **Service Templates** | Specialized sections for boarding, walking, drop-in visits |
 | **Home Access Section** | Key codes, alarm info, WiFi, parking (for in-home sitting) |
@@ -88,10 +88,30 @@ python scripts/generate_form.py \
 | `--pets` | Number of pet profiles (1-10) | 1 |
 | `--fillable` | Enable fillable PDF fields | (enabled by default) |
 | `--no-fillable` | Generate print-only form | — |
-| `--no-home-access` | Omit home access section | — |
+| `--include-section` | Include a section (repeatable) | — |
+| `--exclude-section` | Exclude a section (repeatable) | — |
+| `--list-sections` | Show section defaults by service type | — |
 | `--config` | Path to YAML config file | — |
-| `--output` | Output PDF filename | client_intake_form.pdf |
+| `--output` | Output PDF path | ~/Downloads/client_intake_form.pdf |
 | `--list-themes` | Show available themes and exit | — |
+
+### Section Configuration
+
+Each `service_type` has default sections. Override with `--include-section` or `--exclude-section`:
+
+| Section | general | boarding | walking | drop_in |
+|---------|:-------:|:--------:|:-------:|:-------:|
+| `home_access` | ✓ | — | — | ✓ |
+| `vaccinations` | ✓ | ✓ | — | ✓ |
+| `health_medications` | ✓ | ✓ | — | ✓ |
+| `feeding_daily_care` | ✓ | ✓ | — | ✓ |
+| `behavior_temperament` | ✓ | ✓ | ✓ | ✓ |
+| `service_specific` | — | ✓ | ✓ | ✓ |
+
+**Example:** Walking service with vaccinations:
+```bash
+python scripts/generate_form.py --service-type walking --include-section vaccinations
+```
 
 ### Using a Config File
 
@@ -195,6 +215,12 @@ Tell them:
 | `sunset` | Coral orange & sky blue |
 | `neutral` | Professional gray & soft blue |
 | `midnight` | Elegant slate & warm gold |
+| `summer` | Sky blue & golden yellow |
+| `neon` | Coral & vibrant orange |
+| `berry` | Peachy pink & salmon |
+| `fiery` | Coral & bright orange |
+| `blush` | Soft pink gradient |
+| `deepblue` | Professional blue gradient |
 
 Run `--list-themes` to see color codes.
 
